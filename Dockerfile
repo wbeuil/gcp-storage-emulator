@@ -13,6 +13,7 @@ WORKDIR $APP_HOME
 COPY README.md pyproject.toml setup.py ./
 COPY src src/
 RUN pip install .
+RUN apt-get install -y curl
 
 ENTRYPOINT ["gcp-storage-emulator"]
 CMD ["start"]
