@@ -305,6 +305,8 @@ class Response(object):
         for k, v in self._headers.items():
             self._handler.send_header(k, v)
 
+        self._handler.send_header("Access-Control-Allow-Origin", "*")
+
         content = self._content
 
         if isinstance(self._content, str):
@@ -351,6 +353,8 @@ class Router(object):
             )
             response.status = HTTPStatus.NOT_IMPLEMENTED
 
+        response._headers[]
+        
         response.close()
 
 
