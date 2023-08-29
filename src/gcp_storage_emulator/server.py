@@ -352,8 +352,6 @@ class Router(object):
                 "Method not implemented: {} - {}".format(request.method, request.path)
             )
             response.status = HTTPStatus.NOT_IMPLEMENTED
-
-        response._headers[]
         
         response.close()
 
