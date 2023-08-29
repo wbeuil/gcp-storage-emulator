@@ -36,6 +36,7 @@ def _wipe_data(req, res, storage):
 
 
 def _health_check(req, res, storage):
+    logger.info("What the hell is going on?")
     res.write("OK")
 
 
@@ -301,9 +302,6 @@ class Response(object):
         return self._headers[key]
 
     def close(self):
-        # Set permissive CORS
-        self["Access-Control-Allow-Origin"] = "*"
-
         self._handler.send_response(self.status.value, self.status.phrase)
         for k, v in self._headers.items():
             self._handler.send_header(k, v)
@@ -330,14 +328,13 @@ class Router(object):
         request = Request(self._request_handler, method)
         response = Response(self._request_handler)
 
-        logger.info(f"{method}, {request.path}")
+        response["Access-Control-Allow-Origin"] = "*"
 
         for regex, handlers in HANDLERS:
             pattern = re.compile(regex)
             match = pattern.fullmatch(request.path)
             
             if match:
-                logger.info(f"Found match for regex!")
                 request.set_match(match)
                 handler = handlers.get(method)
                 try:
