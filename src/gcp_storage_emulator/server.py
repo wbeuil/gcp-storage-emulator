@@ -36,7 +36,6 @@ def _wipe_data(req, res, storage):
 
 
 def _health_check(req, res, storage):
-    logger.info("What the hell is going on?")
     res.write("OK")
 
 
