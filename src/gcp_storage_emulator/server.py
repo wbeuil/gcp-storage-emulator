@@ -301,11 +301,12 @@ class Response(object):
         return self._headers[key]
 
     def close(self):
+        self["Access-Control-Allow-Origin"] = "*"
         self._handler.send_response(self.status.value, self.status.phrase)
         for k, v in self._headers.items():
             self._handler.send_header(k, v)
 
-        self._handler.send_header("Access-Control-Allow-Origin", "*")
+        # self._handler.send_header("Access-Control-Allow-Origin", "*")
 
         content = self._content
 
