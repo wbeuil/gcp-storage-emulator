@@ -301,7 +301,9 @@ class Response(object):
         return self._headers[key]
 
     def close(self):
+        # Set permissive CORS
         self["Access-Control-Allow-Origin"] = "*"
+
         self._handler.send_response(self.status.value, self.status.phrase)
         for k, v in self._headers.items():
             self._handler.send_header(k, v)
@@ -333,6 +335,7 @@ class Router(object):
         for regex, handlers in HANDLERS:
             pattern = re.compile(regex)
             match = pattern.fullmatch(request.path)
+            logger.info(pattern, match)
             if match:
                 request.set_match(match)
                 handler = handlers.get(method)
