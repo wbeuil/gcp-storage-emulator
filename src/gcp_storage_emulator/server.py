@@ -335,7 +335,7 @@ class Router(object):
         for regex, handlers in HANDLERS:
             pattern = re.compile(regex)
             match = pattern.fullmatch(request.path)
-            logger.info(pattern, match)
+            logger.info(method, pattern)
             if match:
                 request.set_match(match)
                 handler = handlers.get(method)
