@@ -332,10 +332,12 @@ class Router(object):
         request = Request(self._request_handler, method)
         response = Response(self._request_handler)
 
+        logger.info(f"{method}, {request.path}")
+
         for regex, handlers in HANDLERS:
             pattern = re.compile(regex)
             match = pattern.fullmatch(request.path)
-            logger.info(f"{method}, {request.path}")
+            
             if match:
                 request.set_match(match)
                 handler = handlers.get(method)
