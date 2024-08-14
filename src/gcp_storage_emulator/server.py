@@ -60,6 +60,13 @@ HANDLERS = (
         {POST: objects.copy, OPTIONS: objects.options},
     ),
     (
+        r"^{}/b/(?P<bucket_name>[-.\w]+)/o/(?P<object_id>.*[^/]+)/rewriteTo/b/".format(
+            settings.API_ENDPOINT
+        )
+        + r"(?P<dest_bucket_name>[-.\w]+)/o/(?P<dest_object_id>.*[^/]+)$",
+        {POST: objects.rewrite},
+    ),
+    (
         r"^{}/b/(?P<bucket_name>[-.\w]+)/o/(?P<object_id>.*[^/]+)/compose$".format(
             settings.API_ENDPOINT
         ),
@@ -424,6 +431,14 @@ class Server(object):
             logger.debug('[SERVER] Creating default bucket "{}"'.format(default_bucket))
             buckets.create_bucket(default_bucket, self._storage)
         self._api = APIThread(host, port, self._storage)
+
+    # Context Manager
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, *args):
+        self.stop()
 
     def start(self):
         self._api.start()

@@ -1,7 +1,6 @@
 import hashlib
 import json
 import logging
-import math
 import re
 import secrets
 import string
@@ -124,7 +123,7 @@ def _patch_object(obj, metadata):
 def _make_object_resource(
     base_url, bucket_name, object_name, content_type, content_length, metadata=None
 ):
-    time_id = math.floor(time.time())
+    time_id = time.time_ns()
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
     obj = {
@@ -399,6 +398,47 @@ def copy(request, response, storage, *args, **kwargs):
         _handle_conflict(response, err)
 
 
+def rewrite(request, response, storage, *args, **kwargs):
+    try:
+        obj = storage.get_file_obj(
+            request.params["bucket_name"], request.params["object_id"]
+        )
+    except NotFound:
+        response.status = HTTPStatus.NOT_FOUND
+        return
+
+    dest_obj = _make_object_resource(
+        request.base_url,
+        request.params["dest_bucket_name"],
+        request.params["dest_object_id"],
+        obj["contentType"],
+        obj["size"],
+        obj,
+    )
+
+    file = storage.get_file(request.params["bucket_name"], request.params["object_id"])
+    try:
+        dest_obj = _checksums(file, dest_obj)
+        storage.create_file(
+            request.params["dest_bucket_name"],
+            request.params["dest_object_id"],
+            file,
+            dest_obj,
+        )
+        response.json(
+            {
+                "resource": dest_obj,
+                "written": dest_obj["size"],
+                "size": dest_obj["size"],
+                "done": True,
+            }
+        )
+    except NotFound:
+        response.status = HTTPStatus.NOT_FOUND
+    except Conflict as err:
+        _handle_conflict(response, err)
+
+
 def compose(request, response, storage, *args, **kwargs):
     content_type = None
     dest_file = b""
@@ -470,6 +510,11 @@ def download(request, response, storage, *args, **kwargs):
         else:
             hash_header = "crc32c={},md5={}".format(obj["crc32c"], obj["md5Hash"])
             response[_HASH_HEADER] = hash_header
+
+        if "response-content-disposition" in request.query:
+            response["Content-Disposition"] = request.query[
+                "response-content-disposition"
+            ][0]
 
         response.write_file(file, content_type=obj.get("contentType"))
     except NotFound:
