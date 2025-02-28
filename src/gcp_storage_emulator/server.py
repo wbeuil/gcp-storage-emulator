@@ -223,9 +223,12 @@ class Request(object):
         self._path = request_handler.path
         self._request_handler = request_handler
         self._server_address = request_handler.server.server_address
-        self._base_url = "http://{}:{}".format(
-            self._server_address[0], self._server_address[1]
-        )
+        if request_handler.hostname:
+            self._base_url = "http://{}".format(request_handler.hostname)
+        else:
+            self._base_url = "http://{}:{}".format(
+                self._request_handler.server_address[0], self._request_handler.server_address[1]
+            )
         self._full_url = self._base_url + self._path
         self._parsed_url = urlparse(self._full_url)
         self._query = parse_qs(self._parsed_url.query)
@@ -341,7 +344,7 @@ class Router(object):
         for regex, handlers in HANDLERS:
             pattern = re.compile(regex)
             match = pattern.fullmatch(request.path)
-            
+
             if match:
                 request.set_match(match)
                 handler = handlers.get(method)
@@ -362,7 +365,7 @@ class Router(object):
                 "Method not implemented: {} - {}".format(request.method, request.path)
             )
             response.status = HTTPStatus.NOT_IMPLEMENTED
-        
+
         response.close()
 
 
@@ -372,26 +375,32 @@ class RequestHandler(server.BaseHTTPRequestHandler):
         super().__init__(*args, **kwargs)
 
     def do_GET(self):
+        self.hostname = self.headers.get('Host')
         router = Router(self)
         router.handle(GET)
 
     def do_POST(self):
+        self.hostname = self.headers.get('Host')
         router = Router(self)
         router.handle(POST)
 
     def do_DELETE(self):
+        self.hostname = self.headers.get('Host')
         router = Router(self)
         router.handle(DELETE)
 
     def do_PUT(self):
+        self.hostname = self.headers.get('Host')
         router = Router(self)
         router.handle(PUT)
 
     def do_PATCH(self):
+        self.hostname = self.headers.get('Host')
         router = Router(self)
         router.handle(PATCH)
 
     def do_OPTIONS(self):
+        self.hostname = self.headers.get('Host')
         router = Router(self)
         router.handle(OPTIONS)
 
